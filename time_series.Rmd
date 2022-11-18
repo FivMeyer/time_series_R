@@ -8,14 +8,80 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## Time Series
+# Time Series
 
 Uma série temporal é, basicamente, uma sequência de observações tomada ao longo de um período de tempo. Diversos conjuntos de dados se apresentam como uma série temporal, como por exemplo: taxa de desemprego, juros básicos da economia, PIB, taxa de inflação, dentre outras. As séries temporais são muito presentes na economia, mas não se restrimgem a elas, há também aplicações de séries temporais na engenharia, nos negócios, nas ciências naturais, nas ciências sociais dentre tantos outros.
 
+## Séries Temporais e Processos Estocásticos
 
-## Carregando os Pacotes
+Um processo estocástico nada mais é que uma sequência de variáveis aleatórias
 ```{r}
 library(pacman)
 p_load(tidyverse, forecast, zoo, Quandl, astsa)
 ```
 
+Importar e decompor dados da inflação 
+```{r}
+inflacao = Quandl('BCB/433', order = 'asc', type = 'ts', start_date = '2007-01-01')
+
+inflacao %>% 
+  decompose() %>% 
+  autoplot()
+```
+
+
+Para verificar a sazonalidade pode-se usar a função ggmonthplot
+```{r}
+ggmonthplot(inflacao)
+```
+
+## Estacionariedade
+```{r}
+n <- 150
+eps <- rnorm(n)
+trend <- seq_len(n)
+x2 <- rep(0, n)
+for(i in seq.int(2, n)){
+  x2[i] <- trend[i] + x2[i-1] + eps[i]
+}
+
+autoplot(ts(x2))
+```
+
+# Tipos de Modelos de Séries Temporais
+
+Há basimanete duas formas de se entender uma série temporal, do ponto de vista econométrico. Modelos de série temporal podem ser:
+
+
+1. **Modelos Univariados:** as características da série de interesse são explicadas exclusivamente a partir do comportamento da própria série;
+
+
+2. **Modelos Multivariados:** as características da série de interesse são explicadas não apenas em função da própria série, mas também por outras séries.
+
+# O modelo linear simples
+## O modelo linear simples
+
+Vamos manter as coisas de modo simples, por enquanto, e vamos assumir que $y$ e $x$ se relacionam conforme \begin{equation} y = \beta_{0} + \beta_{1} x + \varepsilon \label{mls} \end{equation} Isto é, $y$ e $x$ se relacionam de maneira \emph{linear}, onde $\beta_{0}$ e $\beta_{1}$ determinam o \emph{intercepto} e a \emph{inclinação} dessa relação, respectivamente. O intercepto $\beta_{0}$ determina, por suposto, o valor esperado de $y$ quando $x=0$, enquanto $\beta_{1}$ representa o incremento esperado em $y$ resultante de uma mudança em uma unidade em $x$. 
+
+A relação acima é claramente \emph{não determinística}, uma vez que admite-se um \emph{erro}, representado por $\varepsilon$. Em outras palavras, tudo o que não for explicado por $x$, estará representado em $\varepsilon$.\footnote{Alguns economistas brincam com a ideia de que $\varepsilon$ representa medida de nossa ignorância sobre o comportamento de $y$.} 
+
+Podemos pensar, nesse contexto, em $\beta_{0} + \beta_{1} x_{i}$ como a \emph{parte explicada} do modelo e $\varepsilon_{i}$ como um \emph{erro aleatório}. O erro, no caso, significa justamente o desvio em relação à linha subjacente da relação contida em \ref{mls}. Nós assumimos, por suposto, que os erros
+
+\begin{enumerate}
+
+  \item possuem média zero;
+  
+  \item são não correlacionados;
+  
+  \item não têm relação com $x$.
+
+\end{enumerate}
+
+É útil também supor que os mesmos são \emph{normalmente distribuídos} e possuem \emph{variância constante} de modo a produzirem intervalos de previsão e performar inferência estatística.\footnote{A despeito dessas duas características manterem os cálculos mais simples, elas não são necessárias para fins de previsão.} Outra suposição importante é que $x$ não é uma variável aleatória. 
+
+# Mínimos quadrados ordinários
+## Mínimos quadrados ordinários
+
+Na prática, nós temos uma coleção de observações, mas não sabemos os valores de $\beta_{0}$ e $\beta_{1}$. Para conhecê-los, precisaremos \emph{estimá-los} a partir dos dados disponíveis. Existem, por suposto, muitas possibilidades para $\beta_{0}$ e $\beta_{1}$, com cada escolha gerando uma \emph{linha diferente}. O \emph{princípio de mínimos quadrados}, que utilizaremos nessa seção, provê um maneira de escolher $\beta_{0}$ e $\beta_{1}$ de forma efetiva minimizando a soma dos erros ao quadrado. 
+
+Isto é, nós escolhemos valores de $\beta_{0}$ e $\beta_{1}$ que minimizam \begin{equation} \sum_{i=1}^{N} \varepsilon_{i}^{2} = \sum_{i=1}^{N} (y_{i} - \beta_{0} - \beta_{1}x_{i})^{2} \end{equation} o que leva a termos \begin{equation} \hat{\beta_{1}} = \frac{\sum_{i=1}^{N} (y_{i} - \bar{y})(x_{i} - \bar{x})}{\sum_{i=1}^{N} (x_{i} - \bar{x})^{2}} \end{equation} \begin{equation} \hat{\beta_{0}} = \bar{y} - \hat{\beta_{1}} \bar{x} \end{equation} onde $\bar{x}$ e $\bar{y}$ são as médias de $x$ e $y$. A linha \emph{estimada} é conhecida como \emph{reta de regressão}. Para ilustrar, vamos considerar, por exemplo, o código abaixo. 
