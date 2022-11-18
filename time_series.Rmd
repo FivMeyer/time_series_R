@@ -12,7 +12,10 @@ knitr::opts_chunk$set(echo = FALSE)
 
 Uma série temporal é, basicamente, uma sequência de observações tomada ao longo de um período de tempo. Diversos conjuntos de dados se apresentam como uma série temporal, como por exemplo: taxa de desemprego, juros básicos da economia, PIB, taxa de inflação, dentre outras. As séries temporais são muito presentes na economia, mas não se restrimgem a elas, há também aplicações de séries temporais na engenharia, nos negócios, nas ciências naturais, nas ciências sociais dentre tantos outros.
 
-```{r}
 
+## Carregando os Pacotes
+```{r}
+library(pacman)
+p_load(tidyverse, forecast, zoo, Quandl, astsa)
 ```
 
